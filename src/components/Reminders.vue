@@ -9,8 +9,12 @@ const AUDIO_PREFIX = 'reminders.v1.audio.'
 const reminders = ref([])
 const text = ref('')
 const due = ref('') // ISO date string (yyyy-mm-dd)
-const time = ref('') // HH:MM (24h) optional
+const time = ref('') // HH:MM (24h) required after recording
 const error = ref('')
+
+// New reminder recording state (pre-save)
+const newId = ref('') // temporary id used to store pre-save recording
+const hasNewAudio = ref(false)
 
 // Recording state
 const recordingId = ref('')
@@ -87,9 +91,46 @@ function persist() {
   }
 }
 
+function ensureNewId() {
+  if (!newId.value) {
+    newId.value = (crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2)) + '-new'
+  }
+}
+
+function startNewRecording() {
+  recError.value = ''
+  ensureNewId()
+  // Start recording against the temporary id
+  startRecording(newId.value)
+}
+
+function deleteNewRecording() {
+  try {
+    if (newId.value) {
+      localStorage.removeItem(audioKey(newId.value))
+      hasNewAudio.value = false
+      try { calcStorageBytes() } catch (e) { /* ignore */ }
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function resetNewForm() {
+  text.value = ''
+  due.value = ''
+  time.value = ''
+  hasNewAudio.value = false
+  // Do not keep stale temp audio
+  deleteNewRecording()
+  newId.value = ''
+}
+
 function addReminder() {
   error.value = ''
   const trimmed = text.value.trim()
+  if (!hasNewAudio.value) {
+    error.value = 'Please record your reminder first.'
+    return
+  }
   if (!trimmed) {
     error.value = 'Please enter a reminder text.'
     return
@@ -98,11 +139,37 @@ function addReminder() {
     error.value = 'Please choose a due date.'
     return
   }
+  if (!time.value) {
+    error.value = 'Please choose a time.'
+    return
+  }
+  // Validate that the temp audio exists
+  const tempKey = newId.value ? audioKey(newId.value) : ''
+  let audioData = ''
+  try { audioData = tempKey ? (localStorage.getItem(tempKey) || '') : '' } catch (e) { audioData = '' }
+  if (!audioData) {
+    error.value = 'Recording was not found. Please record again.'
+    hasNewAudio.value = false
+    return
+  }
+
   const id = crypto && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2)
-  reminders.value.unshift({ id, text: trimmed, due: due.value, time: time.value || '' })
-  text.value = ''
-  due.value = ''
-  time.value = ''
+  const reminder = { id, text: trimmed, due: due.value, time: time.value }
+  reminders.value.unshift(reminder)
+
+  // Move audio from temp key to final key
+  try {
+    localStorage.setItem(audioKey(id), audioData)
+    localStorage.removeItem(tempKey)
+    reminder.hasAudio = true
+  } catch (e) {
+    recError.value = 'Saved reminder but failed to move audio to permanent storage.'
+    reminder.hasAudio = false
+  } finally {
+    try { calcStorageBytes() } catch (e) { /* ignore */ }
+  }
+
+  resetNewForm()
   persist()
 }
 
@@ -179,6 +246,10 @@ async function startRecording(id) {
             localStorage.setItem(audioKey(id), String(reader.result))
             const r = reminders.value.find(x => x.id === id)
             if (r) r.hasAudio = true
+            // If this was a pre-save recording, mark it as available
+            if (id === newId.value) {
+              hasNewAudio.value = true
+            }
           } catch (e) {
             recError.value = 'Failed to save recording. Storage may be full.'
           } finally {
@@ -506,19 +577,32 @@ function downloadICS(reminder) {
     <h1>Reminders</h1>
         <div class="storage">Storage used: {{ storageUsedBytes }} bytes</div>
     <form class="reminder-form" @submit.prevent="addReminder">
+      <!-- Recording controls for new reminder -->
+      <div class="field">
+        <label>Recording</label>
+        <div class="actions">
+          <button v-if="recordingId && recordingId === newId" type="button" class="stop" @click="stopRecording">Stop ({{ recordingSecondsLeft }}s)</button>
+          <button v-else type="button" class="record" @click="startNewRecording">{{ hasNewAudio ? 'Re-record' : 'Record' }}</button>
+          <template v-if="hasNewAudio && recordingId !== newId">
+            <button v-if="playingId === newId" type="button" class="stop" @click="stopPlayback">Stop</button>
+            <button v-else type="button" class="play" @click="playRecording(newId)">Play</button>
+            <button type="button" class="del-audio" @click="deleteNewRecording">Delete audio</button>
+          </template>
+        </div>
+      </div>
       <div class="field">
         <label for="rem-text">Text</label>
-        <input id="rem-text" v-model="text" type="text" placeholder="Buy milk" />
+        <input id="rem-text" v-model="text" type="text" placeholder="Buy milk" :disabled="!hasNewAudio" />
       </div>
       <div class="field">
         <label for="rem-due">Due date</label>
-        <input id="rem-due" v-model="due" type="date" />
+        <input id="rem-due" v-model="due" type="date" :disabled="!hasNewAudio" />
       </div>
       <div class="field">
         <label for="rem-time">Time</label>
-        <input id="rem-time" v-model="time" type="time" />
+        <input id="rem-time" v-model="time" type="time" :disabled="!hasNewAudio" />
       </div>
-      <button type="submit">Add</button>
+      <button type="submit" :disabled="!hasNewAudio || !text.trim() || !due || !time">Save</button>
     </form>
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="recError" class="error">{{ recError }}</p>
