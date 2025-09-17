@@ -20,12 +20,15 @@ header {
   align-items: center;
   gap: 1rem;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .title { font-size: 1.5rem; }
 
 .logo {
   display: block;
+  width: min(125px, 25vw);
+  height: auto;
 }
 
 @media (min-width: 1024px) {

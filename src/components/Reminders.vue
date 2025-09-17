@@ -637,6 +637,8 @@ function downloadICS(reminder) {
 <style scoped>
 .reminders {
   max-width: 720px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 2rem auto;
   padding: 1rem;
 }
@@ -680,7 +682,7 @@ button[type="submit"]:hover { background: #2563eb; }
 .delete { border: 1px solid #ef4444; background: white; color: #ef4444; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
 .delete:hover { background: #fee2e2; }
 
-.actions { display: flex; align-items: center; gap: 0.5rem; }
+.actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .record { border: 1px solid #10b981; background: #10b981; color: white; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
 .record:hover { background: #059669; }
 .stop { border: 1px solid #f59e0b; background: #f59e0b; color: white; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
@@ -692,3 +694,25 @@ button[type="submit"]:hover { background: #2563eb; }
 .ics { border: 1px solid #6b7280; background: white; color: #374151; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
 .ics:hover { background: #f3f4f6; }
 </style>
+
+
+@media (max-width: 600px) {
+  .reminder-form {
+    grid-template-columns: 1fr;
+  }
+  .reminder-form .actions {
+    flex-wrap: wrap;
+  }
+  .list .item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  .list .item .actions {
+    flex-wrap: wrap;
+  }
+  .text, .id, .due {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+}
