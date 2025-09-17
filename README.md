@@ -37,7 +37,7 @@ This project includes a GitHub Actions workflow that builds the app with Vite an
    - Set Source to "GitHub Actions" (not Branch).
 3. Automatic runs on push:
    - The workflow is configured to run on any push to any branch.
-   - Deployment to Pages happens only when pushing to the `main` branch (you can change this in `.github/workflows/deploy.yml`).
+   - Deployment to Pages happens on every push (latest push wins). If you prefer deploying only from a specific branch, update `.github/workflows/deploy.yml` accordingly.
 4. To trigger a deployment now:
    - Push a commit to `main`, or
    - Manually run the workflow: Actions → "Deploy to GitHub Pages" → Run workflow.
@@ -51,7 +51,5 @@ Notes about base path:
   - Easiest way: edit `.github/workflows/deploy.yml` and change `BASE_PATH` to `/`, or set a repository variable named `BASE_PATH` to `/` and modify the build step to use it.
 
 Advanced:
-- If your default branch is not `main` (e.g., `master`), either rename it or update:
-  - The deploy job condition `if: ${{ github.ref == 'refs/heads/main' }}` to match your branch.
 - Custom domain: configure it in Settings → Pages, then the base should usually be `/`.
 - SPA routers: if you add Vue Router in history mode later, create a `404.html` that mirrors `index.html` so deep links work on Pages.
