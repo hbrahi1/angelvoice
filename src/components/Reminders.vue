@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 
 // Local storage key
 const STORAGE_KEY = 'reminders.v1'
@@ -15,6 +15,15 @@ const error = ref('')
 // New reminder recording state (pre-save)
 const newId = ref('') // temporary id used to store pre-save recording
 const hasNewAudio = ref(false)
+
+// Save enablement
+const canSave = computed(() => {
+  try {
+    return hasNewAudio.value && !!(text.value || '').trim() && !!due.value && !!time.value
+  } catch (e) {
+    return false
+  }
+})
 
 // Recording state
 const recordingId = ref('')
@@ -592,17 +601,17 @@ function downloadICS(reminder) {
       </div>
       <div class="field">
         <label for="rem-text">Text</label>
-        <input id="rem-text" v-model="text" type="text" placeholder="Buy milk" :disabled="!hasNewAudio" />
+        <input id="rem-text" v-model="text" type="text" placeholder="Buy milk" :disabled="!hasNewAudio" required />
       </div>
       <div class="field">
         <label for="rem-due">Due date</label>
-        <input id="rem-due" v-model="due" type="date" :disabled="!hasNewAudio" />
+        <input id="rem-due" v-model="due" type="date" :disabled="!hasNewAudio" required />
       </div>
       <div class="field">
         <label for="rem-time">Time</label>
-        <input id="rem-time" v-model="time" type="time" :disabled="!hasNewAudio" />
+        <input id="rem-time" v-model="time" type="time" :disabled="!hasNewAudio" required />
       </div>
-      <button type="submit" :disabled="!hasNewAudio || !text.trim() || !due || !time">Save</button>
+      <button type="submit" :disabled="!canSave">Save</button>
     </form>
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="recError" class="error">{{ recError }}</p>
@@ -669,6 +678,12 @@ button[type="submit"] {
   cursor: pointer;
 }
 button[type="submit"]:hover { background: #2563eb; }
+button[type="submit"][disabled],
+button[type="submit"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none; /* prevent clicks/taps on disabled button */
+}
 
 .error { color: #b91c1c; margin-top: 0.5rem; }
 .info { color: #374151; margin-top: 0.5rem; }
