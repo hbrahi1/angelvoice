@@ -695,7 +695,7 @@ button[type="submit"]:hover { background: #2563eb; }
 .ics:hover { background: #f3f4f6; }
 </style>
 
-
+<style scoped>
 @media (max-width: 600px) {
   .reminder-form {
     grid-template-columns: 1fr;
@@ -716,3 +716,4 @@ button[type="submit"]:hover { background: #2563eb; }
     overflow-wrap: anywhere;
   }
 }
+</style>
