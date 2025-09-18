@@ -28,6 +28,30 @@ npm run dev
 npm run build
 ```
 
+### Run Unit Tests
+
+This project uses Vitest and Vue Test Utils.
+
+- Run all tests once:
+
+```sh
+npm test
+```
+
+- Run in watch mode (re-run on file changes):
+
+```sh
+npm run test:watch
+```
+
+- Generate a coverage report:
+
+```sh
+npm run coverage
+```
+
+Test files are in the `tests/` directory and end with `.spec.js`. Coverage output will be in `coverage/` and also printed in the console.
+
 ## Deploy to GitHub Pages
 
 This project includes a GitHub Actions workflow that builds the app with Vite and deploys it to GitHub Pages. Follow these steps:
