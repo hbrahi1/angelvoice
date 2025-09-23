@@ -5,7 +5,7 @@ import Reminders from './components/Reminders.vue'
 <template>
   <header>
     <img alt="Vue logo" class="logo" src="./assets/logo.png" width="125" height="125" />
-    <h1 class="title">AngelVoice</h1>
+    <h1 class="title">Olly</h1>
   </header>
 
   <main>

@@ -9,6 +9,7 @@ const AUDIO_PREFIX = 'reminders.v1.audio.'
 const reminders = ref([])
 const text = ref('')
 const due = ref('') // ISO date string (yyyy-mm-dd)
+
 const time = ref('') // HH:MM (24h) required after recording
 const error = ref('')
 
@@ -133,6 +134,7 @@ function resetNewForm() {
   newId.value = ''
 }
 
+
 function addReminder() {
   error.value = ''
   const trimmed = text.value.trim()
@@ -178,8 +180,10 @@ function addReminder() {
     try { calcStorageBytes() } catch (e) { /* ignore */ }
   }
 
-  resetNewForm()
+  // Persist first, then trigger ICS download immediately
   persist()
+  try { downloadICS(reminder) } catch (e) { /* ignore */ }
+  resetNewForm()
 }
 
 function deleteReminder(id) {
@@ -417,6 +421,18 @@ function stopPlayback() {
   stopCurrentAudio()
 }
 
+
+const dateFmt = new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+
+function localDateFromISO(isoDate /* 'yyyy-mm-dd' */) {
+  const [y, m, d] = isoDate.split('-').map(Number)
+  return new Date(y, m - 1, d) // local time, no timezone shift
+}
+
+function formatDateLocal(isoDate) {
+  return dateFmt.format(localDateFromISO(isoDate))
+}
+
 onMounted(() => {
   load()
   try { calcStorageBytes() } catch (e) { /* ignore */ }
@@ -483,7 +499,7 @@ function toDateOnlyICS(date) {
   return `${y}${m}${d}`
 }
 
-function buildICS(reminder) {
+function buildICSOld(reminder) {
   const now = new Date()
   const dtstamp = toUTCICS(now)
   const uid = `${reminder.id}@angelvoice`
@@ -524,9 +540,12 @@ function buildICS(reminder) {
     `UID:${uid}`,
     `DTSTAMP:${dtstamp}`,
     `SUMMARY:${summary}`,
-    `DESCRIPTION:${description}`
-  ]
+    `DESCRIPTION:${description}`,
 
+  ]
+  if (playUrl) {
+     lines.push(`URL:${escapeICS(playUrl)}`);
+  }
   try {
     if (reminder.time && reminder.time.length >= 4) {
       // Timed event: compose local date/time and convert to UTC for interoperability
@@ -535,8 +554,8 @@ function buildICS(reminder) {
       const local = new Date(yy, (mm - 1), dd, h, mi, 0, 0)
       const dtstart = toUTCICS(local)
       lines.push(`DTSTART:${dtstart}`)
-      // Set a default duration of 30 minutes
-      lines.push('DURATION:PT30M')
+      // Set a default duration of 5 minutes
+      lines.push('DURATION:PT5M')
     } else {
       // All-day event
       const [yy, mm, dd] = reminder.due.split('-').map(x => parseInt(x || '0', 10))
@@ -558,8 +577,119 @@ function buildICS(reminder) {
   } catch (e) { /* ignore */ }
 
   lines.push('END:VEVENT', 'END:VCALENDAR')
+
+  console.log(playUrl);
   return lines.join('\r\n')
 }
+
+
+
+function buildICS(reminder) {
+  const now = new Date();
+  const dtstamp = toUTCICS(now);
+  const uid = `${reminder.id}@angelvoice`;
+
+  // Optional audio info (kept for MIME; most clients ignore custom audio)
+  let audioDataUrl = '';
+  let audioMime = 'audio/webm';
+  try {
+    const data = localStorage.getItem(audioKey(reminder.id));
+    if (data) {
+      audioDataUrl = data;
+      const m = /^data:([^;]+);/.exec(audioDataUrl);
+      if (m && m[1]) audioMime = m[1];
+    }
+  } catch (e) { /* ignore */ }
+
+  // Play URL that opens this app and plays the recording
+  let playUrl = '';
+  try {
+    const loc = (typeof window !== 'undefined' && window.location)
+        ? window.location
+        : { origin: '', pathname: '' };
+    playUrl = `${loc.origin}${loc.pathname}?play=${encodeURIComponent(reminder.id)}`;
+  } catch (e) { /* ignore */ }
+
+  // Description with link as text (fallback)
+  const descriptionText = audioDataUrl
+      ? `${String(reminder.text || '')}\n\nPlay recording: ${playUrl}`
+      : String(reminder.text || '');
+  const summary = escapeICS(reminder.text);
+  const description = escapeICS(descriptionText);
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//AngelVoice//Reminders//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${dtstamp}`,
+    `SUMMARY:${summary}`,
+    `DESCRIPTION:${description}`
+  ];
+
+  // DTSTART (timed or all-day)
+  let hasDtStart = false;
+  try {
+    if (reminder.time && reminder.time.length >= 4) {
+      // Timed event -> convert local to UTC
+      const [h, mi] = reminder.time.split(':').map(x => parseInt(x || '0', 10));
+      const [yy, mm, dd] = reminder.due.split('-').map(x => parseInt(x || '0', 10));
+      const local = new Date(yy, (mm - 1), dd, h, mi, 0, 0);
+      const dtstart = toUTCICS(local);
+      lines.push(`DTSTART:${dtstart}`);
+      lines.push('DURATION:PT5M'); // lightweight timed event
+      hasDtStart = true;
+    } else if (reminder.due) {
+      // All-day
+      const [yy, mm, dd] = reminder.due.split('-').map(x => parseInt(x || '0', 10));
+      const localMidnight = new Date(yy, (mm - 1), dd);
+      const dateOnly = toDateOnlyICS(localMidnight);
+      lines.push(`DTSTART;VALUE=DATE:${dateOnly}`);
+      hasDtStart = true;
+    }
+  } catch (e) {
+    // proceed without DTSTART if parsing fails
+  }
+
+  // Clickable URL property (explicit). Use only if it's a real http(s) URL.
+  const isHttpUrl = typeof playUrl === 'string' && /^https?:\/\//i.test(playUrl);
+  if (isHttpUrl) {
+    lines.push(`URL:${playUrl}`);
+  }
+
+  // VALARMs (one action per alarm). Fire at start.
+  if (hasDtStart) {
+    // Display alarm (reliable across clients)
+    lines.push(
+        'BEGIN:VALARM',
+        'TRIGGER;RELATED=START:PT0S',
+        'ACTION:DISPLAY',
+        `DESCRIPTION:Reminder - ${summary}`,
+        'END:VALARM'
+    );
+
+    // Optional audio alarm (many clients ignore or play default sound)
+    if (isHttpUrl) {
+      lines.push(
+          'BEGIN:VALARM',
+          'TRIGGER;RELATED=START:PT0S',
+          'ACTION:AUDIO',
+          `ATTACH;FMTTYPE=${audioMime}:${playUrl}`,
+          'END:VALARM'
+      );
+    }
+  }
+
+  lines.push('END:VEVENT', 'END:VCALENDAR');
+
+  // RFC 5545 line endings
+  return lines.join('\r\n') + '\r\n';
+}
+
+
 
 function downloadICS(reminder) {
   try {
@@ -591,7 +721,7 @@ function downloadICS(reminder) {
         <label>Recording</label>
         <div class="actions">
           <button v-if="recordingId && recordingId === newId" type="button" class="stop" @click="stopRecording">Stop ({{ recordingSecondsLeft }}s)</button>
-          <button v-else type="button" class="record" @click="startNewRecording">{{ hasNewAudio ? 'Re-record' : 'Record' }}</button>
+          <button v-else style="min-width: 300px;" type="button" class="record" @click="startNewRecording" >{{ hasNewAudio ? 'Re-record' : 'Record' }}</button>
           <template v-if="hasNewAudio && recordingId !== newId">
             <button v-if="playingId === newId" type="button" class="stop" @click="stopPlayback">Stop</button>
             <button v-else type="button" class="play" @click="playRecording(newId)">Play</button>
@@ -625,7 +755,10 @@ function downloadICS(reminder) {
         <div class="meta">
           <div class="text">{{ r.text }}</div>
           <div class="id">ID: {{ r.id }}</div>
-          <div class="due">Due: {{ new Date(r.due).toLocaleDateString() }}<span v-if="r.time"> {{ r.time }}</span></div>
+
+          <div class="due">
+            Due: {{ formatDateLocal(r.due) }} <span v-if="r.time"> {{ r.time }}</span>
+          </div>
         </div>
         <div class="actions">
           <button v-if="recordingId === r.id" class="stop" @click="stopRecording">Stop ({{ recordingSecondsLeft }}s)</button>
@@ -731,4 +864,20 @@ button[type="submit"]:disabled {
     overflow-wrap: anywhere;
   }
 }
+
+/* Make all action buttons match the Save button’s size */
+.actions button,
+.record, .stop, .play, .del-audio, .ics, .delete {
+  padding: 0.6rem 1rem;        /* same as button[type="submit"] */
+  font-size: 1rem;
+  line-height: 1.25;
+  min-height: 2.5rem;
+
+}/* optional: ensures equal height */
+
+
+
 </style>
+
+
+
