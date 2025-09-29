@@ -486,35 +486,35 @@ onMounted(() => {
   try { calcStorageBytes() } catch (e) { /* ignore */ }
 
   // Handle calendar link (?play=<id>): attempt autoplay via <audio autoplay>, then fallback
-  try {
-    const params = new URLSearchParams(window.location.search || '')
-    const play = params.get('play')
-    if (play) {
-      setTimeout(() => {
-        // First try element-based autoplay
-        tryAutoplayViaElement(play)
-          .then(() => { pendingPlayId.value = '' })
-          .catch(() => {
-            // Fallback to programmatic playback (may still be blocked)
-            playRecording(play, { suppressError: true })
-              .then(() => { pendingPlayId.value = '' })
-              .catch(() => {
-                // Autoplay blocked — show hint and wait for a click/key/touch
-                pendingPlayId.value = play
-                const onInteract = () => {
-                  window.removeEventListener('click', onInteract, true)
-                  window.removeEventListener('keydown', onInteract, true)
-                  window.removeEventListener('touchstart', onInteract, true)
-                  playRecording(play).finally(() => { pendingPlayId.value = '' })
-                }
-                window.addEventListener('click', onInteract, true)
-                window.addEventListener('keydown', onInteract, true)
-                window.addEventListener('touchstart', onInteract, true)
-              })
-          })
-      }, 0)
-    }
-  } catch (e) { console.log(e)/* ignore */ }
+  // try {
+  //   const params = new URLSearchParams(window.location.search || '')
+  //   const play = params.get('play')
+  //   if (play) {
+  //     setTimeout(() => {
+  //       // First try element-based autoplay
+  //       tryAutoplayViaElement(play)
+  //         .then(() => { pendingPlayId.value = '' })
+  //         .catch(() => {
+  //           // Fallback to programmatic playback (may still be blocked)
+  //           playRecording(play, { suppressError: true })
+  //             .then(() => { pendingPlayId.value = '' })
+  //             .catch(() => {
+  //               // Autoplay blocked — show hint and wait for a click/key/touch
+  //               pendingPlayId.value = play
+  //               const onInteract = () => {
+  //                 window.removeEventListener('click', onInteract, true)
+  //                 window.removeEventListener('keydown', onInteract, true)
+  //                 window.removeEventListener('touchstart', onInteract, true)
+  //                 playRecording(play).finally(() => { pendingPlayId.value = '' })
+  //               }
+  //               window.addEventListener('click', onInteract, true)
+  //               window.addEventListener('keydown', onInteract, true)
+  //               window.addEventListener('touchstart', onInteract, true)
+  //             })
+  //         })
+  //     }, 0)
+  //   }
+  // } catch (e) { console.log(e)/* ignore */ }
 
 
 
@@ -822,13 +822,14 @@ function downloadICS(reminder) {
           </div>
         </div>
         <div class="actions">
-          <button v-if="recordingId === r.id" class="stop" @click="stopRecording">Stop ({{ recordingSecondsLeft }}s)</button>
-          <button v-else class="record" @click="startRecording(r.id)">{{ r.hasAudio ? 'Re-record' : 'Record' }}</button>
+
           <template v-if="r.hasAudio && recordingId !== r.id">
             <button v-if="playingId === r.id" class="stop" @click="stopPlayback">Stop</button>
             <button v-else class="play" @click="playRecording(r.id)">Play</button>
             <button class="del-audio" @click="deleteAudio(r.id)">Delete audio</button>
           </template>
+          <button v-if="recordingId === r.id" class="stop" @click="stopRecording">Stop ({{ recordingSecondsLeft }}s)</button>
+          <button v-else class="record" @click="startRecording(r.id)">{{ r.hasAudio ? 'Re-record' : 'Record' }}</button>
           <button class="ics" @click="downloadICS(r)">Download ICS</button>
         </div>
         <button class="delete" @click="deleteReminder(r.id)">Delete</button>
@@ -892,11 +893,11 @@ button[type="submit"]:disabled {
 .delete:hover { background: #fee2e2; }
 
 .actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-.record { border: 1px solid #10b981; background: #10b981; color: white; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
+.record { border: 1px solid #10b981; background: #10b981; color: 374151; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
 .record:hover { background: #059669; }
 .stop { border: 1px solid #f59e0b; background: #f59e0b; color: white; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
 .stop:hover { background: #d97706; }
-.play { border: 1px solid #6b7280; background: white; color: #374151; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
+.play { border: 1px solid #6b7280; background: #10b981; color: #374151; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
 .play:hover { background: #f3f4f6; }
 .del-audio { border: 1px solid #e11d48; background: white; color: #e11d48; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
 .del-audio:hover { background: #ffe4e6; }
