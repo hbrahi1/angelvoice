@@ -826,7 +826,7 @@ function downloadICS(reminder) {
           <template v-if="r.hasAudio && recordingId !== r.id">
             <button v-if="playingId === r.id" class="stop" @click="stopPlayback">Stop</button>
             <button v-else class="play" @click="playRecording(r.id)">Play</button>
-            <button class="del-audio" @click="deleteAudio(r.id)">Delete audio</button>
+<!--            <button class="del-audio" @click="deleteAudio(r.id)">Delete audio</button>-->
           </template>
           <button v-if="recordingId === r.id" class="stop" @click="stopRecording">Stop ({{ recordingSecondsLeft }}s)</button>
           <button v-else class="record" @click="startRecording(r.id)">{{ r.hasAudio ? 'Re-record' : 'Record' }}</button>
