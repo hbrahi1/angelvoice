@@ -1,5 +1,8 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue'
+import { nextTick } from 'vue'
+
+const highlightId = ref('')   // which reminder to highlight
 
 // Local storage key
 const STORAGE_KEY = 'reminders.v1'
@@ -433,6 +436,51 @@ function formatDateLocal(isoDate) {
   return dateFmt.format(localDateFromISO(isoDate))
 }
 
+function isScrollable(el) {
+  if (!el) return false
+  const style = getComputedStyle(el)
+  const overflowY = style.overflowY
+  return (overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight
+}
+
+function getScrollParent(el) {
+  let p = el?.parentElement
+  while (p && p !== document.body && !isScrollable(p)) p = p.parentElement
+  return p || document.scrollingElement || document.documentElement
+}
+
+function scrollToReveal(el) {
+  const parent = getScrollParent(el)
+  const parentRect = parent.getBoundingClientRect()
+  const elRect = el.getBoundingClientRect()
+  const current = parent.scrollTop
+  const offset = (elRect.top - parentRect.top) - (parent.clientHeight / 2 - elRect.height / 2)
+  // iOS/Safari may ignore smooth; that’s fine—still scrolls.
+  try {
+    parent.scrollTo({ top: current + offset, behavior: 'smooth' })
+  } catch {
+    parent.scrollTop = current + offset
+  }
+  // Also nudge the window (fallback for some mobile modes)
+  try {
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 80, behavior: 'smooth' })
+  } catch {}
+}
+
+function highlightAndScroll(id) {
+  highlightId.value = id
+  nextTick(() => {
+    const el = document.getElementById(`rem-${id}`)
+    if (el) {
+      // small delay helps after first paint / mobile emulation
+      setTimeout(() => scrollToReveal(el), 50)
+    }
+  })
+  setTimeout(() => { if (highlightId.value === id) highlightId.value = '' }, 10000)
+}
+
+
+
 onMounted(() => {
   load()
   try { calcStorageBytes() } catch (e) { /* ignore */ }
@@ -466,7 +514,20 @@ onMounted(() => {
           })
       }, 0)
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) { console.log(e)/* ignore */ }
+
+
+
+  try {
+    const params = new URLSearchParams(window.location.search || '')
+    const play = params.get('play')
+    if (play) {
+      pendingPlayId.value = play   // keeps your “tap to play” hint, if desired
+      highlightAndScroll(play)
+    }
+  } catch {}
+
+
 })
 
 // Optional: keep storage in sync if user edits via DevTools
@@ -751,7 +812,7 @@ function downloadICS(reminder) {
     <div v-if="reminders.length === 0" class="empty">No reminders yet.</div>
 
     <ul class="list" v-else>
-      <li v-for="r in reminders" :key="r.id" class="item">
+      <li v-for="r in reminders" :key="r.id" :class="['item', { highlight: r.id === highlightId }]">
         <div class="meta">
           <div class="text">{{ r.text }}</div>
           <div class="id">ID: {{ r.id }}</div>
@@ -875,6 +936,22 @@ button[type="submit"]:disabled {
 
 }/* optional: ensures equal height */
 
+/* highlight effect */
+.item.highlight {
+  position: relative;
+  background: #fffbeb;              /* soft amber */
+  transition: background 600ms ease;
+  box-shadow: 0 0 0 2px #f59e0b33 inset, 0 0 0 0 rgba(245,158,11,.6);
+  animation: pulseGlow 1200ms ease-out 3;
+  border-radius: 8px;
+}
+
+@keyframes pulseGlow {
+  0%   { box-shadow: 0 0 0 0 rgba(245,158,11,.6); }
+  70%  { box-shadow: 0 0 0 12px rgba(245,158,11,0); }
+  100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+}
+html { scroll-behavior: smooth; }
 
 
 </style>
