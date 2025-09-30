@@ -1,0 +1,21 @@
+{
+    "title": "Olly",
+    "reminders": "Rappels",
+    "storage": "Espace utilise",
+    "recording": "Enregistrement",
+    "record": "Enregistrer",
+    "text": "Texte",
+    "duedate": "Date",
+    "due": "Date",
+    "time": "Heure",
+    "play": "Jouer",
+    "delete": "Effacer",
+    "deleteaudio": "Effacer audio",
+    "download": "Telecharger",
+    "save": "Sauvegarder",
+    "cancel": "Annuler",
+    "stop": "Stop",
+    "rerecord": "Re-enregistrer",
+    "noreminders": "Aucun rappel",
+    "placeholder": "Acheter du lait"
+}

@@ -775,42 +775,42 @@ function downloadICS(reminder) {
 
 <template>
   <section class="reminders">
-    <h1>Reminders</h1>
-        <div class="storage">Storage used: {{ storageUsedBytes }} bytes</div>
+    <h1>{{ $t('reminders') }}</h1>
+        <div class="storage">{{ $t('storage') }}: {{ storageUsedBytes }} bytes</div>
     <form class="reminder-form" @submit.prevent="addReminder">
       <!-- Recording controls for new reminder -->
       <div class="field">
-        <label>Recording</label>
+        <label>{{ $t('recording') }}</label>
         <div class="actions">
-          <button v-if="recordingId && recordingId === newId" type="button" class="stop" @click="stopRecording">Stop ({{ recordingSecondsLeft }}s)</button>
-          <button v-else style="min-width: 300px;" type="button" class="record" @click="startNewRecording" >{{ hasNewAudio ? 'Re-record' : 'Record' }}</button>
+          <button v-if="recordingId && recordingId === newId" type="button" class="stop" @click="stopRecording">{{ $t('stop') }} ({{ recordingSecondsLeft }}s)</button>
+          <button v-else style="min-width: 300px;" type="button" class="record" @click="startNewRecording" >{{ hasNewAudio ? $t('rerecord') : $t('record') }}</button>
           <template v-if="hasNewAudio && recordingId !== newId">
-            <button v-if="playingId === newId" type="button" class="stop" @click="stopPlayback">Stop</button>
-            <button v-else type="button" class="play" @click="playRecording(newId)">Play</button>
-            <button type="button" class="del-audio" @click="deleteNewRecording">Delete audio</button>
+            <button v-if="playingId === newId" type="button" class="stop" @click="stopPlayback">{{ $t('stop') }}</button>
+            <button v-else type="button" class="play" @click="playRecording(newId)">{{ $t('play') }}</button>
+            <button type="button" class="del-audio" @click="deleteNewRecording">{{ $t('deleteaudio') }}</button>
           </template>
         </div>
       </div>
       <div class="field">
-        <label for="rem-text">Text</label>
-        <input id="rem-text" v-model="text" type="text" placeholder="Buy milk" :disabled="!hasNewAudio" required />
+        <label for="rem-text">{{ $t('text') }}</label>
+        <input id="rem-text" v-model="text" type="text" :placeholder="$t('placeholder')" :disabled="!hasNewAudio" required />
       </div>
       <div class="field">
-        <label for="rem-due">Due date</label>
+        <label for="rem-due">{{ $t('duedate') }}</label>
         <input id="rem-due" v-model="due" type="date" :disabled="!hasNewAudio" required />
       </div>
       <div class="field">
-        <label for="rem-time">Time</label>
+        <label for="rem-time">{{ $t('time') }}</label>
         <input id="rem-time" v-model="time" type="time" :disabled="!hasNewAudio" required />
       </div>
-      <button type="submit" :disabled="!canSave">Save</button>
+      <button type="submit" :disabled="!canSave">{{ $t('save') }}</button>
     </form>
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="recError" class="error">{{ recError }}</p>
 <!--    <p v-if="pendingPlayId && !playingId" class="info">Click or tap anywhere to play the recording from the calendar link.</p>-->
     <audio ref="autoplayAudioEl" style="display:none" playsinline autoplay></audio>
 
-    <div v-if="reminders.length === 0" class="empty">No reminders yet.</div>
+    <div v-if="reminders.length === 0" class="empty">{{ $t('noreminders') }}.</div>
 
     <ul class="list" v-else>
       <li v-for="r in reminders" :key="r.id" :class="['item', { highlight: r.id === highlightId }]" :id="r.id">
@@ -819,20 +819,20 @@ function downloadICS(reminder) {
           <div class="id" >ID: {{ r.id }}</div>
 
           <div class="due">
-            Due: {{ formatDateLocal(r.due) }} <span v-if="r.time"> {{ r.time }}</span>
+            {{ $t('due') }}: {{ formatDateLocal(r.due) }} <span v-if="r.time"> {{ r.time }}</span>
           </div>
         </div>
         <div class="actions">
 
           <template v-if="r.hasAudio && recordingId !== r.id">
-            <button v-if="playingId === r.id" class="stop" @click="stopPlayback">Stop</button>
-            <button v-else class="play" @click="playRecording(r.id)">Play</button>
+            <button v-if="playingId === r.id" class="stop" @click="stopPlayback">{{ $t('stop') }}</button>
+            <button v-else class="play" @click="playRecording(r.id)">{{ $t('play') }}</button>
 <!--            <button class="del-audio" @click="deleteAudio(r.id)">Delete audio</button>-->
           </template>
-          <button v-if="recordingId === r.id" class="stop" @click="stopRecording">Stop ({{ recordingSecondsLeft }}s)</button>
-          <button v-else class="record" @click="startRecording(r.id)">{{ r.hasAudio ? 'Re-record' : 'Record' }}</button>
-          <button class="ics" @click="downloadICS(r)">Download</button>
-          <button class="delete" @click="deleteReminder(r.id)">Delete</button>
+          <button v-if="recordingId === r.id" class="stop" @click="stopRecording">{{ $t('stop') }} ({{ recordingSecondsLeft }}s)</button>
+          <button v-else class="record" @click="startRecording(r.id)">{{ r.hasAudio ? $t('rerecord') : $t('record') }}</button>
+          <button class="ics" @click="downloadICS(r)">{{ $t('download') }}</button>
+          <button class="delete" @click="deleteReminder(r.id)">{{ $t('delete') }}</button>
         </div>
 
       </li>

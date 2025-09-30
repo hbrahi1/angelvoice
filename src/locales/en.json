@@ -1,0 +1,21 @@
+{
+    "title": "Olly",
+    "reminders": "Reminders",
+    "storage": "Storage used",
+    "recording": "Recording",
+    "record": "Record",
+    "text": "Text",
+    "duedate": "Due date",
+    "due": "Due",
+    "time": "Time",
+    "play": "Play",
+    "delete": "Delete",
+    "deleteaudio": "Delete audio",
+    "download": "Download",
+    "save": "Save",
+    "cancel": "Cancel",
+    "stop": "Stop",
+    "rerecord": "Re-record",
+    "noreminders": "No reminders yet",
+    "placeholder": "Buy Milk"
+}
