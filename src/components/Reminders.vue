@@ -471,7 +471,7 @@ function scrollToReveal(el) {
 function highlightAndScroll(id) {
   highlightId.value = id
   nextTick(() => {
-    const el = document.getElementById(`rem-${id}`)
+    const el = document.getElementById(`${id}`)
     if (el) {
       // small delay helps after first paint / mobile emulation
       setTimeout(() => scrollToReveal(el), 50)
@@ -813,10 +813,10 @@ function downloadICS(reminder) {
     <div v-if="reminders.length === 0" class="empty">No reminders yet.</div>
 
     <ul class="list" v-else>
-      <li v-for="r in reminders" :key="r.id" :class="['item', { highlight: r.id === highlightId }]">
+      <li v-for="r in reminders" :key="r.id" :class="['item', { highlight: r.id === highlightId }]" :id="r.id">
         <div class="meta">
           <div class="text">{{ r.text }}</div>
-<!--          <div class="id">ID: {{ r.id }}</div>-->
+          <div class="id" >ID: {{ r.id }}</div>
 
           <div class="due">
             Due: {{ formatDateLocal(r.due) }} <span v-if="r.time"> {{ r.time }}</span>
@@ -832,8 +832,9 @@ function downloadICS(reminder) {
           <button v-if="recordingId === r.id" class="stop" @click="stopRecording">Stop ({{ recordingSecondsLeft }}s)</button>
           <button v-else class="record" @click="startRecording(r.id)">{{ r.hasAudio ? 'Re-record' : 'Record' }}</button>
           <button class="ics" @click="downloadICS(r)">Download</button>
+          <button class="delete" @click="deleteReminder(r.id)">Delete</button>
         </div>
-        <button class="delete" @click="deleteReminder(r.id)">Delete</button>
+
       </li>
     </ul>
   </section>

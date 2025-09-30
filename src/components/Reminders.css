@@ -285,6 +285,7 @@ button[type="submit"]:disabled {
     text-transform: uppercase;
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
 }
 
 .delete:hover {
@@ -450,4 +451,21 @@ button[type="submit"]:disabled {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
+
+/* highlight effect */
+.item.highlight {
+    position: relative;
+    background: #fffbeb;              /* soft amber */
+    transition: background 600ms ease;
+    box-shadow: 0 0 0 2px #f59e0b33 inset, 0 0 0 0 rgba(245,158,11,.6);
+    animation: pulseGlow 1200ms ease-out 3;
+    border-radius: 8px;
+}
+
+@keyframes pulseGlow {
+    0%   { box-shadow: 0 0 0 0 rgba(245,158,11,.6); }
+    70%  { box-shadow: 0 0 0 12px rgba(245,158,11,0); }
+    100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+}
+html { scroll-behavior: smooth; }
 </style>
