@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue'
 import { nextTick } from 'vue'
+import './Reminders.css'
 
 const highlightId = ref('')   // which reminder to highlight
 
@@ -283,14 +284,14 @@ async function startRecording(id) {
     }
 
     recordingId.value = id
-    recordingSecondsLeft.value = 30
+    recordingSecondsLeft.value = 60
     mediaRecorder.start()
     recordInterval = setInterval(() => {
       if (recordingSecondsLeft.value > 0) recordingSecondsLeft.value--
     }, 1000)
     recordTimer = setTimeout(() => {
       try { mediaRecorder && mediaRecorder.stop() } catch (e) { /* ignore */ }
-    }, 30000)
+    }, 60000)
   } catch (e) {
     recError.value = 'Microphone permission denied or unavailable.'
     cleanupStream()
@@ -806,7 +807,7 @@ function downloadICS(reminder) {
     </form>
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="recError" class="error">{{ recError }}</p>
-    <p v-if="pendingPlayId && !playingId" class="info">Click or tap anywhere to play the recording from the calendar link.</p>
+<!--    <p v-if="pendingPlayId && !playingId" class="info">Click or tap anywhere to play the recording from the calendar link.</p>-->
     <audio ref="autoplayAudioEl" style="display:none" playsinline autoplay></audio>
 
     <div v-if="reminders.length === 0" class="empty">No reminders yet.</div>
@@ -815,7 +816,7 @@ function downloadICS(reminder) {
       <li v-for="r in reminders" :key="r.id" :class="['item', { highlight: r.id === highlightId }]">
         <div class="meta">
           <div class="text">{{ r.text }}</div>
-          <div class="id">ID: {{ r.id }}</div>
+<!--          <div class="id">ID: {{ r.id }}</div>-->
 
           <div class="due">
             Due: {{ formatDateLocal(r.due) }} <span v-if="r.time"> {{ r.time }}</span>
@@ -830,7 +831,7 @@ function downloadICS(reminder) {
           </template>
           <button v-if="recordingId === r.id" class="stop" @click="stopRecording">Stop ({{ recordingSecondsLeft }}s)</button>
           <button v-else class="record" @click="startRecording(r.id)">{{ r.hasAudio ? 'Re-record' : 'Record' }}</button>
-          <button class="ics" @click="downloadICS(r)">Download ICS</button>
+          <button class="ics" @click="downloadICS(r)">Download</button>
         </div>
         <button class="delete" @click="deleteReminder(r.id)">Delete</button>
       </li>
@@ -838,124 +839,7 @@ function downloadICS(reminder) {
   </section>
 </template>
 
-<style scoped>
-.reminders {
-  max-width: 720px;
-  width: 100%;
-  box-sizing: border-box;
-  margin: 2rem auto;
-  padding: 1rem;
-}
 
-h1 { margin-bottom: 0.25rem; }
-.storage { color: #555; margin-bottom: 1rem; font-size: 0.9rem; }
-
-.reminder-form {
-  display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  gap: 0.75rem;
-  align-items: end;
-}
-
-.field { display: flex; flex-direction: column; }
-label { font-size: 0.9rem; margin-bottom: 0.25rem; }
-input[type="text"], input[type="date"], input[type="time"] {
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--color-border, #ccc);
-  border-radius: 6px;
-}
-button[type="submit"] {
-  padding: 0.6rem 1rem;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  background: #3b82f6;
-  color: white;
-  cursor: pointer;
-}
-button[type="submit"]:hover { background: #2563eb; }
-button[type="submit"][disabled],
-button[type="submit"]:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none; /* prevent clicks/taps on disabled button */
-}
-
-.error { color: #b91c1c; margin-top: 0.5rem; }
-.info { color: #374151; margin-top: 0.5rem; }
-.empty { color: #666; margin-top: 1rem; }
-
-.list { list-style: none; padding: 0; margin-top: 1rem; }
-.item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
-.text { font-weight: 600; }
-.id { font-size: 0.75rem; color: #666; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-.due { font-size: 0.85rem; color: #555; }
-.delete { border: 1px solid #ef4444; background: white; color: #ef4444; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
-.delete:hover { background: #fee2e2; }
-
-.actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-.record { border: 1px solid #10b981; background: #10b981; color: 374151; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
-.record:hover { background: #059669; }
-.stop { border: 1px solid #f59e0b; background: #f59e0b; color: white; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
-.stop:hover { background: #d97706; }
-.play { border: 1px solid #6b7280; background: #10b981; color: #374151; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
-.play:hover { background: #f3f4f6; }
-.del-audio { border: 1px solid #e11d48; background: white; color: #e11d48; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
-.del-audio:hover { background: #ffe4e6; }
-.ics { border: 1px solid #6b7280; background: white; color: #374151; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; }
-.ics:hover { background: #f3f4f6; }
-</style>
-
-<style scoped>
-@media (max-width: 600px) {
-  .reminder-form {
-    grid-template-columns: 1fr;
-  }
-  .reminder-form .actions {
-    flex-wrap: wrap;
-  }
-  .list .item {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-  }
-  .list .item .actions {
-    flex-wrap: wrap;
-  }
-  .text, .id, .due {
-    word-break: break-word;
-    overflow-wrap: anywhere;
-  }
-}
-
-/* Make all action buttons match the Save button’s size */
-.actions button,
-.record, .stop, .play, .del-audio, .ics, .delete {
-  padding: 0.6rem 1rem;        /* same as button[type="submit"] */
-  font-size: 1rem;
-  line-height: 1.25;
-  min-height: 2.5rem;
-
-}/* optional: ensures equal height */
-
-/* highlight effect */
-.item.highlight {
-  position: relative;
-  background: #fffbeb;              /* soft amber */
-  transition: background 600ms ease;
-  box-shadow: 0 0 0 2px #f59e0b33 inset, 0 0 0 0 rgba(245,158,11,.6);
-  animation: pulseGlow 1200ms ease-out 3;
-  border-radius: 8px;
-}
-
-@keyframes pulseGlow {
-  0%   { box-shadow: 0 0 0 0 rgba(245,158,11,.6); }
-  70%  { box-shadow: 0 0 0 12px rgba(245,158,11,0); }
-  100% { box-shadow: 0 0 0 0 rgba(245,158,11,0); }
-}
-html { scroll-behavior: smooth; }
-
-
-</style>
 
 
 
