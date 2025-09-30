@@ -59,15 +59,62 @@ h1 {
 }
 
 .reminder-form {
-    display: grid;
-    grid-template-columns: 1fr auto auto auto;
+    display: flex;
+    flex-direction: column;
     gap: 16px;
-    align-items: end;
     background: #F5F5F5 !important;
     padding: 24px;
     border-radius: 16px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     color-scheme: light !important;
+}
+
+.reminder-form .field:first-of-type {
+    grid-column: 1 / -1;
+    width: 100%;
+}
+
+@media (min-width: 768px) {
+    .reminder-form {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto auto;
+        align-items: end;
+    }
+}
+
+@media (min-width: 1024px) {
+    .reminder-form {
+        display: grid;
+        grid-template-columns: 1fr minmax(140px, auto) minmax(120px, auto) minmax(100px, auto);
+        grid-template-rows: auto auto;
+        align-items: end;
+        gap: 16px;
+    }
+
+    .reminder-form .field:first-of-type {
+        grid-column: 1 / -1;
+    }
+
+    .reminder-form .field:nth-of-type(2) {
+        grid-column: 1 / 2;
+        grid-row: 2;
+    }
+
+    .reminder-form .field:nth-of-type(3) {
+        grid-column: 2 / 3;
+        grid-row: 2;
+    }
+
+    .reminder-form .field:nth-of-type(4) {
+        grid-column: 3 / 4;
+        grid-row: 2;
+    }
+
+    .reminder-form button[type="submit"] {
+        grid-column: 4 / 5;
+        grid-row: 2;
+    }
 }
 
 .field {
@@ -115,28 +162,28 @@ button[type="submit"] {
     padding: 10px 24px;
     min-height: 40px;
     border-radius: 20px;
-    border: 2px solid var(--md-sys-color-primary);
-    background: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
+    border: 2px solid var(--md-sys-color-primary) !important;
+    background: var(--md-sys-color-primary) !important;
+    color: var(--md-sys-color-on-primary) !important;
     cursor: pointer;
     font-weight: 500;
     font-size: 0.875rem;
     letter-spacing: 0.1px;
     text-transform: uppercase;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 button[type="submit"]:hover {
-    background: #1565C0;
-    border-color: #1565C0;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    background: #1565C0 !important;
+    border-color: #1565C0 !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25) !important;
     transform: translateY(-1px);
 }
 
 button[type="submit"]:active {
     transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
 }
 
 button[type="submit"][disabled],
@@ -144,7 +191,7 @@ button[type="submit"]:disabled {
     opacity: 0.38;
     cursor: not-allowed;
     pointer-events: none;
-    box-shadow: none;
+    box-shadow: none !important;
     transform: none;
 }
 
@@ -260,9 +307,9 @@ button[type="submit"]:disabled {
 }
 
 .record {
-    border: 2px solid var(--md-sys-color-success);
-    background: var(--md-sys-color-success);
-    color: var(--md-sys-color-on-success);
+    border: 2px solid var(--md-sys-color-success) !important;
+    background: var(--md-sys-color-success) !important;
+    color: var(--md-sys-color-on-success) !important;
     padding: 10px 24px;
     min-height: 40px;
     border-radius: 20px;
@@ -271,20 +318,21 @@ button[type="submit"]:disabled {
     font-size: 0.875rem;
     letter-spacing: 0.1px;
     text-transform: uppercase;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
 }
 
 .record:hover {
-    background: #1B5E20;
-    border-color: #1B5E20;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    background: #1B5E20 !important;
+    border-color: #1B5E20 !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
     transform: translateY(-1px);
 }
 
 .record:active {
     transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
 }
 
 .stop {
@@ -301,6 +349,7 @@ button[type="submit"]:disabled {
     text-transform: uppercase;
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
 }
 
 .stop:hover {
@@ -329,6 +378,7 @@ button[type="submit"]:disabled {
     text-transform: uppercase;
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
 }
 
 .play:hover {
@@ -357,6 +407,7 @@ button[type="submit"]:disabled {
     text-transform: uppercase;
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
 }
 
 .del-audio:hover {
@@ -385,6 +436,7 @@ button[type="submit"]:disabled {
     text-transform: uppercase;
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
 }
 
 .ics:hover {
